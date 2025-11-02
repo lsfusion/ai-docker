@@ -7,10 +7,14 @@
 	    reverse_proxy mcp:8000
     }
 
-    @chat path /{$OPENAI_PATH}/v1/chat/completions
+    @chat path /{$OPENAI_PATH}/mcp/v1/chat/completions
     handle @chat {
-        uri strip_prefix /{$OPENAI_PATH}
+        uri strip_prefix /{$OPENAI_PATH}/mcp
         reverse_proxy mcp-bridge:9090
+    }
+
+    handle_path /{$OPENAI_PATH}/mcp* {
+        reverse_proxy proxy:4001
     }
 
     handle_path /{$OPENAI_PATH}* {
