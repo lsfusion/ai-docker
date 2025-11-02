@@ -19,16 +19,20 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
 
       MCP_URL: https://${DOMAIN}/${MCP_PATH}
- #    PUBLIC_OPENAI_URL: ${PUBLIC_OPENAI_URL}
     expose:
       - "4000"
     depends_on:
       - mcp
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+    restart: unless-stopped
+
+  proxy-mcp:
+    image: ghcr.io/lsfusion/openai:latest
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    expose:
+      - "4001"
+    depends_on:
+      - mcp
     restart: unless-stopped
 
   mcp-bridge:
@@ -38,20 +42,17 @@ services:
     environment:
       MCP_BRIDGE__CONFIG__FILE: /mcp_bridge/config.json
     depends_on:
-      - proxy
+      - proxy-mcp
       - mcp
     expose:
       - "9090"
     restart: unless-stopped
 
   openwebui:
-#    image: ghcr.io/open-webui/open-webui:latest
-    image: zalbiraw/open-webui:latest # needed to disable streaming since mcp-bridge does not support it https://github.com/open-webui/open-webui/pull/18764/files
+    image: ghcr.io/open-webui/open-webui:latest
 
     environment:
-      - DEFAULT_CHAT_STREAM_RESPONSE=False
-      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
-      - OPENAI_API_EXTRA_PARAMS={"stream":false}
+      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/mcp/v1
 #    image: lobehub/lobe-chat:latest
 #    environment:
 #      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
@@ -61,7 +62,7 @@ services:
 #      - "3210"
        - "8080"
     depends_on:
-      - mcp-bridge
+      - proxy-mcp
     restart: unless-stopped
 
   caddy:
@@ -80,6 +81,7 @@ services:
       - caddy_config:/config
     depends_on:
       - openwebui
+      - proxy-mcp
     restart: unless-stopped
 
 volumes:
