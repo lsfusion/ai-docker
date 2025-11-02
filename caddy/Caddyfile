@@ -1,0 +1,30 @@
+{
+	email {$LETSENCRYPT_EMAIL}
+}
+
+{$DOMAIN} {
+	handle_path /{$MCP_PATH}* {
+	    reverse_proxy mcp:8000
+        }
+
+        @chat path /{$OPENAI_PATH}/v1/chat/completions
+        handle @chat {
+            uri strip_prefix /{$OPENAI_PATH}
+            reverse_proxy mcp-bridge:9090
+        }
+
+        handle_path /{$OPENAI_PATH}* {
+            reverse_proxy proxy:4000
+        }
+
+	@noSlashMCP path /{$MCP_PATH}
+	redir @noSlashMCP /{$MCP_PATH}/ 308
+
+	@noSlashOPENAI path /{$OPENAI_PATH}
+	redir @noSlashOPENAI /{$OPENAI_PATH}/ 308
+
+        handle {
+	        reverse_proxy openwebui:8080
+	}
+}
+

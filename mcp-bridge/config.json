@@ -1,0 +1,11 @@
+{
+  "inference_server": { "base_url": "http://proxy:4000/v1"},
+  "network": { "host": "0.0.0.0", "port": 9090 },
+  "mcp_servers": {
+    "lsfusion-mcp": {
+      "command": "uvx",
+      "args": ["mcp-proxy", "http://mcp:8000/", "--transport=streamablehttp"]
+    }
+  },
+  "logging": { "log_level": "INFO" }
+}

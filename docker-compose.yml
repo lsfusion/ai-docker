@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  mcp:
+    image: ghcr.io/lsfusion/mcp:latest
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+ #    MCP_HOST: ${MCP_HOST:-0.0.0.0}
+      MCP_PORT: ${MCP_PORT}
+ #     PUBLIC_MCP_URL: ${PUBLIC_MCP_URL}
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  proxy:
+    image: ghcr.io/lsfusion/openai:latest
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      MCP_URL: https://${DOMAIN}/${MCP_PATH}
+ #    PUBLIC_OPENAI_URL: ${PUBLIC_OPENAI_URL}
+    expose:
+      - "4000"
+    depends_on:
+      - mcp
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  mcp-bridge:
+    image: ghcr.io/secretiveshell/mcp-bridge/mcp-bridge:0.5.1
+    volumes:
+      - ./mcp-bridge/config.json:/mcp_bridge/config.json:ro
+    environment:
+      MCP_BRIDGE__CONFIG__FILE: /mcp_bridge/config.json
+    depends_on:
+      - proxy
+      - mcp
+    expose:
+      - "9090"
+    restart: unless-stopped
+
+  openwebui:
+#    image: ghcr.io/open-webui/open-webui:latest
+    image: zalbiraw/open-webui:latest # needed to disable streaming since mcp-bridge does not support it https://github.com/open-webui/open-webui/pull/18764/files
+
+    environment:
+      - DEFAULT_CHAT_STREAM_RESPONSE=False
+      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
+      - OPENAI_API_EXTRA_PARAMS={"stream":false}
+#    image: lobehub/lobe-chat:latest
+#    environment:
+#      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
+#      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
+#      - DEFAULT_MODEL=gpt-4o-mini
+    expose:
+#      - "3210"
+       - "8080"
+    depends_on:
+      - mcp-bridge
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      MCP_PATH: ${MCP_PATH}
+      OPENAI_PATH: ${OPENAI_PATH}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - openwebui
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
