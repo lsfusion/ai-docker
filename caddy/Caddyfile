@@ -14,7 +14,7 @@
     }
 
     handle_path /{$OPENAI_PATH}/mcp* {
-        reverse_proxy proxy:4001
+        reverse_proxy proxy-mcp:4000
     }
 
     handle_path /{$OPENAI_PATH}* {

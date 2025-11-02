@@ -1,5 +1,5 @@
 {
-  "inference_server": { "base_url": "http://proxy-mcp:4001/v1"},
+  "inference_server": { "base_url": "http://proxy-mcp:4000/v1"},
   "network": { "host": "0.0.0.0", "port": 9090 },
   "mcp_servers": {
     "lsfusion-mcp": {
