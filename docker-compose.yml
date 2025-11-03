@@ -17,8 +17,6 @@ services:
     image: ghcr.io/lsfusion/openai:latest
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-
-      MCP_URL: https://${DOMAIN}/${MCP_PATH}
     expose:
       - "4000"
     depends_on:
@@ -29,6 +27,8 @@ services:
     image: ghcr.io/lsfusion/openai:latest
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      MCP_URL: https://${DOMAIN}/${MCP_PATH}
     expose:
       - "4000"
     depends_on:
