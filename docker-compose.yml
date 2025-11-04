@@ -7,7 +7,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       PINECONE_API_KEY: ${PINECONE_API_KEY}
  #    MCP_HOST: ${MCP_HOST:-0.0.0.0}
-      MCP_PORT: ${MCP_PORT}
+      MCP_PORT: 8000
  #     PUBLIC_MCP_URL: ${PUBLIC_MCP_URL}
     expose:
       - "8000"
@@ -17,6 +17,8 @@ services:
     image: ghcr.io/lsfusion/openai:latest
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      MODEL_ID: ${MODEL_ID}
     expose:
       - "4000"
     depends_on:
@@ -27,6 +29,8 @@ services:
     image: ghcr.io/lsfusion/openai:latest
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      MODEL_ID: ${MODEL_ID}
 
       MCP_URL: https://${DOMAIN}/${MCP_PATH}
     expose:
@@ -57,7 +61,7 @@ services:
 #    environment:
 #      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
 #      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
-#      - DEFAULT_MODEL=gpt-4o-mini
+      - DEFAULT_MODEL=${MODEL_ID}
     expose:
 #      - "3210"
        - "8080"

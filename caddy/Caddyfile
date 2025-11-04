@@ -21,14 +21,8 @@
         reverse_proxy proxy:4000
     }
 
-	@noSlashMCP path /{$MCP_PATH}
-	redir @noSlashMCP /{$MCP_PATH}/ 308
-
-	@noSlashOPENAI path /{$OPENAI_PATH}
-	redir @noSlashOPENAI /{$OPENAI_PATH}/ 308
-
-        handle {
-	        reverse_proxy openwebui:8080
+    handle {
+	   reverse_proxy openwebui:8080
 	}
 }
 
