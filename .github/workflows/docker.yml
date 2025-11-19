@@ -1,4 +1,4 @@
-name: Build & Push Proxy
+name: Build & Push OpenWebUI
 
 on:
   push:
