@@ -39,22 +39,23 @@ services:
       - mcp
     restart: unless-stopped
 
-  mcp-bridge:
-    image: ghcr.io/secretiveshell/mcp-bridge/mcp-bridge:0.5.1
-    volumes:
-      - ./mcp-bridge/config.json:/mcp_bridge/config.json:ro
-    environment:
-      MCP_BRIDGE__CONFIG__FILE: /mcp_bridge/config.json
-    depends_on:
-      - proxy-mcp
-      - mcp
-    expose:
-      - "9090"
-    restart: unless-stopped
+#  mcp-bridge:
+#    image: ghcr.io/secretiveshell/mcp-bridge/mcp-bridge:0.5.1
+#    volumes:
+#      - ./mcp-bridge/config.json:/mcp_bridge/config.json:ro
+#    environment:
+#      MCP_BRIDGE__CONFIG__FILE: /mcp_bridge/config.json
+#    depends_on:
+#      - proxy-mcp
+#      - mcp
+#    expose:
+#      - "9090"
+#    restart: unless-stopped
 
   openwebui:
-    image: ghcr.io/open-webui/open-webui:latest
-
+    image: ghcr.io/lsfusion/open-webui:latest
+    volumes:
+      - ./open-webui:/app/backend/data
     environment:
       - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/mcp/v1
 #    image: lobehub/lobe-chat:latest
@@ -62,6 +63,9 @@ services:
 #      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
 #      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
       - DEFAULT_MODEL=${MODEL_ID}
+      - MCP_URL=http://proxy-mcp:8000
+      - MCP_ID=lsf-mcp
+      - MCP_NAME=lsFusion MCP
     expose:
 #      - "3210"
        - "8080"
