@@ -63,14 +63,14 @@ services:
 #      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
 #      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
       - DEFAULT_MODEL=${MODEL_ID}
-      - MCP_URL=http://proxy-mcp:8000
+      - MCP_URL=http://mcp:8000
       - MCP_ID=lsf-mcp
       - MCP_NAME=lsFusion MCP
     expose:
 #      - "3210"
        - "8080"
     depends_on:
-      - proxy-mcp
+      - mcp
     restart: unless-stopped
 
   caddy:
