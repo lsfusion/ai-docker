@@ -66,6 +66,7 @@ services:
       - MCP_URL=http://mcp:8000
       - MCP_ID=lsf-mcp
       - MCP_NAME=lsFusion MCP
+      - WEBUI_AUTH=False
     expose:
 #      - "3210"
        - "8080"
