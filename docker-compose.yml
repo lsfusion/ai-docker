@@ -8,6 +8,9 @@ services:
  #    MCP_HOST: ${MCP_HOST:-0.0.0.0}
       MCP_PORT: 8000
       LOG_DIR: /data/logs
+      # Stamped into every event-log line for analytics attribution; set the
+      # actual value (image digest / mcp git sha) in the host .env on deploy.
+      MCP_SERVER_VERSION: ${MCP_SERVER_VERSION:-unknown}
  #     PUBLIC_MCP_URL: ${PUBLIC_MCP_URL}
     expose:
       - "8000"
