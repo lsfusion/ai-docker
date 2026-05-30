@@ -1,0 +1,3 @@
+# Phase A2 log sink: keep the dir, ignore the JSONL contents (kept out of git).
+logs/*
+!logs/.gitkeep
