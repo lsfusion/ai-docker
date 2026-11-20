@@ -1,3 +1,5 @@
 # Phase A2 log sink: keep the dir, ignore the JSONL contents (kept out of git).
 logs/*
 !logs/.gitkeep
+# Corpus snapshot, delivered by the ragBuildSnapshot Jenkins job.
+snapshot/

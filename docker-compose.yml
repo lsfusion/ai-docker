@@ -8,11 +8,18 @@ services:
  #    MCP_HOST: ${MCP_HOST:-0.0.0.0}
       MCP_PORT: 8000
       LOG_DIR: /data/logs
+      # The corpus snapshot the server can search in-process. RETRIEVAL_BACKEND
+      # is the canary switch: "local" uses it, anything else (or a missing /
+      # refused snapshot, or an embeddings outage) serves from the OpenAI
+      # vector store, which is how this has always worked.
+      RAG_SNAPSHOT_PATH: /data/snapshot/corpus.npz
+      RETRIEVAL_BACKEND: ${RETRIEVAL_BACKEND:-store}
  #     PUBLIC_MCP_URL: ${PUBLIC_MCP_URL}
     expose:
       - "8000"
     volumes:
       - ./mcp-data/logs:/data/logs
+      - ./mcp-data/snapshot:/data/snapshot
     logging:
       driver: json-file
       options:

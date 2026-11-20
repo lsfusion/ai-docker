@@ -3,8 +3,10 @@
 }
 
 {$DOMAIN} {
-	handle_path /{$MCP_PATH}* {
-	    reverse_proxy mcp:8000
+    handle /{$MCP_PATH}* {
+        @withTrailing path_regexp trailing ^(/{$MCP_PATH})/+$ 
+        redir @withTrailing {re.trailing.1} 308      
+        reverse_proxy mcp:8000
     }
 
 #    @chat path /{$OPENAI_PATH}/mcp/v1/chat/completions

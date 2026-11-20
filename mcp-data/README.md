@@ -1,43 +1,80 @@
-# mcp-data — MCP feedback-loop log sink (Phase A2)
+# mcp-data — what the `mcp` service keeps on the host
 
-The `mcp` service bind-mounts `./mcp-data/logs` → `/data/logs` (env `LOG_DIR=/data/logs`).
-The MCP server appends dated JSONL there:
+Two bind mounts of the `mcp` service in `../docker-compose.yml`. Their contents
+stay out of git (see `.gitignore`).
+
+## `logs/` → `/data/logs` (`LOG_DIR`)
 
 - `retrieval-YYYYMMDD.jsonl` — one line per `lsfusion_retrieve_docs` call (analytics).
-- `reports-YYYYMMDD.jsonl` — one line per `lsfusion_report_feedback` submission.
+- `reports/inbox/` — every `lsfusion_report_feedback` report as its own JSON file
+  (`REPORTS_DIR` defaults to `<LOG_DIR>/reports`). The Jenkins job
+  `postFeedbackIssues` posts each one as an issue in `lsfusion/platform-feedback`
+  and moves the file to `reports/processed/`.
+- `reports-YYYYMMDD.jsonl` — a short event journal without report text: one
+  `report_stored` line per stored report (id, `signal_type`, `payload_size`) and
+  one `report_feedback` line with `ok: false` per refused report.
 
-Writing is **best-effort**: a failure never breaks the tools — it only emits a JSON
-`event_log_error` line to stderr. So a permissions/mount problem is SILENT except in
-the container's stderr. Monitor it after deploy:
+Writing is best-effort: a failure never breaks a tool, it only prints an
+`event_log_error` line to the container's stderr. Check after a deploy:
 `docker logs stack-mcp-1 2>&1 | grep event_log_error`.
 
-The `logs/` contents are kept OUT of git (see `.gitignore`); only `.gitkeep` is tracked.
+## `snapshot/` → `/data/snapshot` (`RAG_SNAPSHOT_PATH`)
 
-## Deploy (host: ai.lsfusion.org, /opt/stack)
+`corpus.npz` is the only index `lsfusion_retrieve_docs` searches; without it the
+tool answers with an error. The Jenkins job `ragBuildSnapshot` rebuilds it after
+docs commits on platform master and replaces it atomically (temp file + `mv`).
+If a rebuild fails, the old snapshot stays, and the server logs a warning on
+load once it is older than `SNAPSHOT_MAX_AGE_DAYS` (7).
 
-The container runs as non-root **uid 10001**, so the host dir MUST be writable by it:
+## Ownership
+
+The container runs as non-root **uid 10001**, so it must own the directories:
 
 ```bash
-mkdir -p /opt/stack/mcp-data/logs
+mkdir -p /opt/stack/mcp-data/logs /opt/stack/mcp-data/snapshot
 chown -R 10001:10001 /opt/stack/mcp-data
 ```
 
-The `deployMcp` Jenkins job does `docker compose pull && up -d mcp` — it does NOT
-`git pull`. And `/opt/stack/docker-compose.yml` has drifted from github HEAD
-(box keeps `RAG_VECTOR_STORE_ID` and comments out `openwebui`). So do NOT blindly
-`git pull` github HEAD onto the box. Apply ONLY the `mcp`-service deltas
-(`RAG_VECTOR_STORE_ID`, `LOG_DIR`, the `volumes` bind-mount, the `logging` cap) to the
-deployed file, then recreate only mcp:
+## Settings that live only on the host
+
+Not in git (names only):
+
+- `/etc/environment`: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `MODEL_ID`, `DOMAIN`,
+  `MCP_PATH`, `OPENAI_PATH`, `LETSENCRYPT_EMAIL`;
+- `/opt/stack/.env`: `RAG_VECTOR_STORE_ID`, `RETRIEVAL_BACKEND`.
+
+The compose file still passes `RETRIEVAL_BACKEND`, `RAG_VECTOR_STORE_ID` and
+`PINECONE_API_KEY`, but the server no longer reads them: it has no vector-store
+fallback, so setting `RETRIEVAL_BACKEND=store` changes nothing.
+
+## Changing the stack
+
+This repository is the source of truth for `/opt/stack`; do not edit the files
+on the box. A change goes:
+
+1. commit and push here;
+2. on the box: `cd /opt/stack && git pull --ff-only`;
+3. `docker compose up -d <service>` for the changed service only.
+
+`caddy/Caddyfile` is bind-mounted on its own: `git pull` replaces it with a new
+file, and the running container keeps seeing the old one, so `caddy reload` does
+not pick the change up. Validate, then recreate (HTTPS, `/mcp` included, is down
+for a few seconds):
 
 ```bash
-docker compose pull mcp && docker compose up -d --no-deps --force-recreate mcp
+docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker compose up -d --force-recreate caddy
 ```
 
-## Retention
+The `deployMcp` Jenkins job only refreshes the `mcp` image
+(`docker compose pull mcp && docker compose up -d mcp`); it never runs
+`git pull`, so compose changes reach the box only as above.
 
-The dated JSONL files are NOT rotated by Docker's `json-file` driver (that caps only
-the container's stdout/stderr). Add a host cron to prune by age — retrieval is high
-volume / low value, reports are kept longer:
+## Log retention (proposal, not installed)
+
+The dated JSONL files are not rotated by Docker's `json-file` driver (that caps
+only the container's stdout/stderr). A host cron could prune them by age —
+retrieval is high volume / low value, the report journal is kept longer:
 
 ```cron
 # /etc/cron.d/mcp-log-retention  (UTC)
@@ -45,4 +82,4 @@ volume / low value, reports are kept longer:
 23 4 * * * root find /opt/stack/mcp-data/logs -name 'reports-*.jsonl'   -mtime +365 -delete
 ```
 
-Check disk budget on the single VM before raising these windows.
+Check the disk budget of the single VM before settling the windows.
