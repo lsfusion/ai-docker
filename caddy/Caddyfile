@@ -3,28 +3,13 @@
 }
 
 {$DOMAIN} {
-    handle /{$MCP_PATH}* {
-        @withTrailing path_regexp trailing ^(/{$MCP_PATH})/+$ 
-        redir @withTrailing {re.trailing.1} 308      
-        reverse_proxy mcp:8000
-    }
+	handle /{$MCP_PATH}* {
+		@withTrailing path_regexp trailing ^(/{$MCP_PATH})/+$
+		redir @withTrailing {re.trailing.1} 308
+		reverse_proxy mcp:8000
+	}
 
-#    @chat path /{$OPENAI_PATH}/mcp/v1/chat/completions
-#    handle @chat {
-#        uri strip_prefix /{$OPENAI_PATH}/mcp
-#        reverse_proxy mcp-bridge:9090
-#    }
-
-    handle_path /{$OPENAI_PATH}/mcp* {
-        reverse_proxy proxy-mcp:4000
-    }
-
-    handle_path /{$OPENAI_PATH}* {
-        reverse_proxy proxy:4000
-    }
-
-    handle {
-	   reverse_proxy openwebui:8080
+	handle {
+		respond 404
 	}
 }
-

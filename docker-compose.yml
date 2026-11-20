@@ -36,7 +36,6 @@ services:
       DOMAIN: ${DOMAIN}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
       MCP_PATH: ${MCP_PATH}
-      OPENAI_PATH: ${OPENAI_PATH}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
