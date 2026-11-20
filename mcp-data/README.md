@@ -37,15 +37,10 @@ chown -R 10001:10001 /opt/stack/mcp-data
 
 ## Settings that live only on the host
 
-Not in git (names only):
-
-- `/etc/environment`: `OPENAI_API_KEY`, `PINECONE_API_KEY`, `MODEL_ID`, `DOMAIN`,
-  `MCP_PATH`, `OPENAI_PATH`, `LETSENCRYPT_EMAIL`;
-- `/opt/stack/.env`: `RAG_VECTOR_STORE_ID`, `RETRIEVAL_BACKEND`.
-
-The compose file still passes `RETRIEVAL_BACKEND`, `RAG_VECTOR_STORE_ID` and
-`PINECONE_API_KEY`, but the server no longer reads them: it has no vector-store
-fallback, so setting `RETRIEVAL_BACKEND=store` changes nothing.
+Not in git (names only): `/etc/environment` holds `OPENAI_API_KEY` (`mcp`
+embeds search queries with it), `DOMAIN`, `MCP_PATH` and `LETSENCRYPT_EMAIL`
+(`caddy`). Compose takes them from the shell, which gets them at SSH login
+(PAM), so the `deployMcp` job sees them too.
 
 ## Changing the stack
 
