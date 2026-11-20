@@ -27,28 +27,6 @@ services:
         max-file: "5"
     restart: unless-stopped
 
-#  openwebui:
-#    image: ghcr.io/lsfusion/open-webui:latest
-#    volumes:
-#      - openwebui:/app/backend/data
-#    environment:
-#      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/mcp/v1
-##    image: lobehub/lobe-chat:latest
-##    environment:
-##      - OPENAI_PROXY_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
-##      - OPENAI_API_BASE_URL=https://${DOMAIN}/${OPENAI_PATH}/v1
-#      - DEFAULT_MODEL=${MODEL_ID}
-#      - MCP_URL=http://mcp:8000
-#      - MCP_ID=lsf-mcp
-#      - MCP_NAME=lsFusion MCP
-#      - WEBUI_AUTH=False
-#    expose:
-##      - "3210"
-#       - "8080"
-#    depends_on:
-#      - mcp
-#    restart: unless-stopped
-
   caddy:
     image: caddy:2
     ports:
@@ -64,11 +42,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-#      - openwebui
       - mcp
     restart: unless-stopped
 
 volumes:
   caddy_data:
   caddy_config:
-  openwebui:
