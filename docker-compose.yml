@@ -27,32 +27,6 @@ services:
         max-file: "5"
     restart: unless-stopped
 
-  proxy:
-    image: ghcr.io/lsfusion/openai:latest
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-
-      MODEL_ID: ${MODEL_ID}
-    expose:
-      - "4000"
-    depends_on:
-      - mcp
-    restart: unless-stopped
-
-  proxy-mcp:
-    image: ghcr.io/lsfusion/openai:latest
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-
-      MODEL_ID: ${MODEL_ID}
-
-      MCP_URL: https://${DOMAIN}/${MCP_PATH}
-    expose:
-      - "4000"
-    depends_on:
-      - mcp
-    restart: unless-stopped
-
 #  openwebui:
 #    image: ghcr.io/lsfusion/open-webui:latest
 #    volumes:
@@ -91,7 +65,7 @@ services:
       - caddy_config:/config
     depends_on:
 #      - openwebui
-      - proxy-mcp
+      - mcp
     restart: unless-stopped
 
 volumes:
